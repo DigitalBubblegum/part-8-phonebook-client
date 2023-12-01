@@ -14,10 +14,6 @@ const App = () => {
   if (result.loading) {
     return (<div>loading</div>)    
   }
-  return(
-    <div>
-      <Persons persons={result.data.allPersons} />
-    </div>
-  )
+  return(<Persons persons={result.data.allPersons} />)
 }
 export default App
