@@ -30,7 +30,7 @@ mutation createPerson($name: String!, $street: String!, $city: String!, $phone: 
 }
 `
 
-const PersonForm = () => {
+const PersonForm = ({ setError }) => {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [street, setStreet] = useState('')
@@ -38,7 +38,11 @@ const PersonForm = () => {
 
 
   const [ createPerson ] = useMutation(CREATE_PERSON,{
-    refetchQueries: [ { query: ALL_PERSONS } ]
+    refetchQueries: [ { query: ALL_PERSONS } ],
+    onError: (error) => {
+      const messages = error.graphQLErrors.map(e => e.message).join('\n')
+      setError(messages)
+    }
   })
 
   const submit = (event) => {
