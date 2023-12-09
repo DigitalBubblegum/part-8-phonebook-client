@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { gql,useApolloClient,useQuery } from '@apollo/client'
+import { gql,useApolloClient,useQuery, useSubscription } from '@apollo/client'
 import Persons from './components/Persons'
 import PersonForm from './components/PersonForm'
 import Notify from './components/Notify'
 import PhoneForm from './components/PhoneForm'
 import LoginForm from './components/LoginForm'
+import { PERSON_ADDED } from './queries'
 const ALL_PERSONS = gql`
 query {
   allPersons {
@@ -14,7 +15,32 @@ query {
   }
 }
 `
+// function that takes care of manipulating cache
+export const updateCache = (cache, query, addedPerson) => {
+  // helper that is used to eliminate saving same person twice
+  const uniqByName = (a) => {
+    let seen = new Set()
+    return a.filter((item) => {
+      let k = item.name
+      return  seen.has(k) ? false : seen.add(k)
+    })
+  }
+
+  cache.updateQuery(query, ({ allPersons }) => {
+    return {
+      allPersons: uniqByName(allPersons.concat(addedPerson)),
+    }
+  })
+}
 const App = () => {
+  useSubscription(PERSON_ADDED,{
+    onData: ({data,client}) => {
+      const addedPerson = data.data.personAdded
+      notify(`${addedPerson.name} added`)
+      console.log('subscription block',data)
+      updateCache(client.cache, { query: ALL_PERSONS }, addedPerson)
+    }
+  })
   const [token, setToken] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
   const notify = (message) => {
